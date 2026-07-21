@@ -1,0 +1,465 @@
+[
+  {
+    "issue_id": "ISS-1042",
+    "title": "Checkout fails on Android after coupon applied",
+    "state": "growing",
+    "first_seen": "2026-06-28T09:14:00Z",
+    "last_seen": "2026-07-20T22:03:00Z",
+    "source_channels": ["app_reviews", "support_tickets"],
+    "affected_segments": {
+      "platform": "Android",
+      "app_version": "4.3.0",
+      "plan_tier": "pro",
+      "cohort_size": 312,
+      "min_cohort_size_enforced": 50
+    },
+    "aggregate_sentiment_context": {
+      "overall_star_average": 4.2,
+      "note": "Overall rating held flat at 4.2 all month; this issue is invisible in the aggregate."
+    },
+    "severity": {
+      "score": 0.81,
+      "volume": 312,
+      "velocity_per_day": 21.4,
+      "emotional_intensity": 0.73,
+      "customer_weight": 1.6,
+      "note": "Emotional intensity is directional and per-issue; it prioritizes, it does not score individuals."
+    },
+    "prevalence": {
+      "estimate_pct": 3.1,
+      "method": "selection_bias_adjusted",
+      "uncertainty_interval_pct": [2.4, 4.0],
+      "basis": "joined to checkout-attempt logs for the Android 4.3 cohort"
+    },
+    "changepoint": {
+      "detected_at": "2026-06-27T00:00:00Z",
+      "method": "PELT",
+      "fdr_controlled": true,
+      "aligned_event": "EVT-release-4.3.0",
+      "alignment_lag_hours": 14
+    },
+    "evidence": {
+      "total_quote_count": 14,
+      "sample_quotes": [
+        {
+          "feedback_id": "FB-88213",
+          "channel": "app_reviews",
+          "source_span": {"start": 12, "end": 71},
+          "quote": "applied my coupon and the pay button just spins forever, had to give up",
+          "aspect": "checkout",
+          "sentiment": "negative"
+        },
+        {
+          "feedback_id": "FB-88461",
+          "channel": "support_tickets",
+          "source_span": {"start": 0, "end": 54},
+          "quote": "checkout hangs every time after I enter the promo code SAVE10",
+          "aspect": "checkout",
+          "sentiment": "negative"
+        }
+      ]
+    },
+    "causal_hypothesis": {
+      "state": "plausible_hypothesis",
+      "text": "The 4.3.0 coupon-validation change appears to block checkout completion on Android.",
+      "evidence_checks": [
+        {"name": "temporal_precedence", "result": "pass"},
+        {"name": "cohort_specificity", "result": "pass"},
+        {"name": "magnitude", "result": "pending"}
+      ],
+      "alternative_events": ["EVT-payment-gateway-config-2026-06-25"]
+    },
+    "fix_link": null,
+    "outcome_measurement": null,
+    "regression_watch": {"armed": false, "status": "not_armed", "reason": "issue not yet resolved"}
+  },
+  {
+    "issue_id": "ISS-0987",
+    "title": "Push notifications duplicated on iOS",
+    "state": "resolved",
+    "first_seen": "2026-05-30T11:00:00Z",
+    "last_seen": "2026-07-02T08:20:00Z",
+    "source_channels": ["app_reviews", "nps_verbatims"],
+    "affected_segments": {
+      "platform": "iOS",
+      "app_version": "4.2.1",
+      "plan_tier": "free",
+      "cohort_size": 540,
+      "min_cohort_size_enforced": 50
+    },
+    "severity": {"score": 0.44, "volume": 540, "velocity_per_day": 9.1, "emotional_intensity": 0.51, "customer_weight": 1.0},
+    "prevalence": {
+      "estimate_pct": 5.5,
+      "method": "unadjusted_reported",
+      "uncertainty_interval_pct": null,
+      "basis": "no behavioral data joined; reported rate only, not a census"
+    },
+    "changepoint": {
+      "detected_at": "2026-05-29T00:00:00Z",
+      "method": "CUSUM",
+      "fdr_controlled": true,
+      "aligned_event": "EVT-release-4.2.1",
+      "alignment_lag_hours": 20
+    },
+    "evidence": {
+      "total_quote_count": 33,
+      "sample_quotes": [
+        {
+          "feedback_id": "FB-79001",
+          "channel": "app_reviews",
+          "source_span": {"start": 4, "end": 52},
+          "quote": "getting every notification twice since the last update, annoying",
+          "aspect": "notifications",
+          "sentiment": "negative"
+        }
+      ]
+    },
+    "causal_hypothesis": {
+      "state": "supported",
+      "text": "A retry loop introduced in 4.2.1's push service double-delivered notifications.",
+      "evidence_checks": [
+        {"name": "temporal_precedence", "result": "pass"},
+        {"name": "cohort_specificity", "result": "pass"},
+        {"name": "magnitude", "result": "pass"}
+      ],
+      "alternative_events": []
+    },
+    "fix_link": {"fix_ref": "EVT-release-4.2.3", "shipped_at": "2026-06-18T00:00:00Z", "linked_by": "pm.dana"},
+    "outcome_measurement": {
+      "method": "interrupted_time_series",
+      "signal_change": "fell_to_baseline",
+      "pre_rate_per_day": 9.1,
+      "post_rate_per_day": 0.6,
+      "grade": "fix_held",
+      "limitations": "single-group ITS; no control cohort available"
+    },
+    "regression_watch": {"armed": true, "status": "clear", "threshold_per_day": 3.0}
+  },
+  {
+    "issue_id": "ISS-0715",
+    "title": "Search returns empty results for non-Latin queries",
+    "state": "regressed",
+    "first_seen": "2026-03-12T10:00:00Z",
+    "last_seen": "2026-07-19T15:40:00Z",
+    "source_channels": ["support_tickets", "social_mentions"],
+    "affected_segments": {
+      "platform": "all",
+      "app_version": "4.3.0",
+      "plan_tier": "business",
+      "cohort_size": 128,
+      "min_cohort_size_enforced": 50
+    },
+    "severity": {"score": 0.67, "volume": 128, "velocity_per_day": 6.7, "emotional_intensity": 0.62, "customer_weight": 1.9},
+    "prevalence": {
+      "estimate_pct": 2.0,
+      "method": "selection_bias_adjusted",
+      "uncertainty_interval_pct": [1.3, 3.1],
+      "basis": "joined to search-query logs; non-Latin-script share"
+    },
+    "changepoint": {
+      "detected_at": "2026-07-05T00:00:00Z",
+      "method": "PELT",
+      "fdr_controlled": true,
+      "aligned_event": "EVT-release-4.3.0",
+      "alignment_lag_hours": 30
+    },
+    "evidence": {
+      "total_quote_count": 41,
+      "sample_quotes": [
+        {
+          "feedback_id": "FB-91120",
+          "channel": "support_tickets",
+          "source_span": {"start": 0, "end": 61},
+          "quote": "search finds nothing when I type in Japanese, worked fine last month",
+          "aspect": "search",
+          "sentiment": "negative"
+        }
+      ]
+    },
+    "causal_hypothesis": {
+      "state": "supported",
+      "text": "A search-indexing change in 4.3.0 reintroduced the non-Latin tokenization defect fixed in 4.1.",
+      "evidence_checks": [
+        {"name": "temporal_precedence", "result": "pass"},
+        {"name": "cohort_specificity", "result": "pass"},
+        {"name": "magnitude", "result": "pass"}
+      ],
+      "alternative_events": []
+    },
+    "fix_link": {"fix_ref": "EVT-release-4.1.0", "shipped_at": "2026-04-02T00:00:00Z", "linked_by": "pm.dana"},
+    "outcome_measurement": {
+      "method": "interrupted_time_series",
+      "signal_change": "regressed_above_threshold",
+      "pre_rate_per_day": 0.4,
+      "post_rate_per_day": 6.7,
+      "grade": "regression_detected",
+      "limitations": "prior fix graded fix_held in April; watch re-tripped after 4.3.0"
+    },
+    "regression_watch": {"armed": true, "status": "tripped", "threshold_per_day": 3.0, "reopened_at": "2026-07-06T02:00:00Z", "owner_pinged": "eng.ravi"}
+  },
+  {
+    "issue_id": "ISS-1101",
+    "title": "Low contrast on settings screen in dark mode",
+    "state": "emerging",
+    "first_seen": "2026-07-16T19:00:00Z",
+    "last_seen": "2026-07-20T20:10:00Z",
+    "source_channels": ["app_reviews"],
+    "affected_segments": {
+      "platform": "all",
+      "app_version": "4.3.0",
+      "plan_tier": "mixed",
+      "cohort_size": 9,
+      "min_cohort_size_enforced": 50
+    },
+    "severity": {"score": 0.18, "volume": 9, "velocity_per_day": 1.8, "emotional_intensity": 0.34, "customer_weight": 1.0},
+    "prevalence": {
+      "estimate_pct": null,
+      "method": "insufficient_power",
+      "uncertainty_interval_pct": null,
+      "basis": "below detector power threshold; cohort under minimum for a bias-adjusted estimate"
+    },
+    "changepoint": {
+      "detected_at": null,
+      "method": "PELT",
+      "fdr_controlled": true,
+      "aligned_event": null,
+      "note": "no significant changepoint at current power; not aligned"
+    },
+    "evidence": {
+      "total_quote_count": 9,
+      "sample_quotes": [
+        {
+          "feedback_id": "FB-93540",
+          "channel": "app_reviews",
+          "source_span": {"start": 8, "end": 58},
+          "quote": "cant read the settings labels in dark mode, grey on grey",
+          "aspect": "accessibility",
+          "sentiment": "negative"
+        }
+      ]
+    },
+    "causal_hypothesis": {
+      "state": "observed_signal",
+      "text": "Signal observed; below the statistical power needed to draft a causal hypothesis. Degraded to evidence collection.",
+      "evidence_checks": [],
+      "alternative_events": []
+    },
+    "fix_link": null,
+    "outcome_measurement": null,
+    "regression_watch": {"armed": false, "status": "not_armed", "reason": "issue not yet resolved"}
+  },
+  {
+    "issue_id": "ISS-0902",
+    "title": "App crashes on cold start after OS update",
+    "state": "peaked",
+    "first_seen": "2026-06-10T07:00:00Z",
+    "last_seen": "2026-07-18T12:30:00Z",
+    "source_channels": ["app_reviews", "support_tickets", "social_mentions"],
+    "affected_segments": {
+      "platform": "iOS",
+      "app_version": "4.2.1",
+      "plan_tier": "mixed",
+      "cohort_size": 806,
+      "min_cohort_size_enforced": 50
+    },
+    "severity": {"score": 0.88, "volume": 806, "velocity_per_day": 33.2, "emotional_intensity": 0.79, "customer_weight": 1.3},
+    "prevalence": {
+      "estimate_pct": 7.8,
+      "method": "selection_bias_adjusted",
+      "uncertainty_interval_pct": [6.1, 9.6],
+      "basis": "joined to crash telemetry for the iOS cohort"
+    },
+    "changepoint": {
+      "detected_at": "2026-06-09T00:00:00Z",
+      "method": "CUSUM",
+      "fdr_controlled": true,
+      "aligned_event": "EVT-ios-18.2-rollout",
+      "alignment_lag_hours": 18
+    },
+    "evidence": {
+      "total_quote_count": 118,
+      "sample_quotes": [
+        {
+          "feedback_id": "FB-84010",
+          "channel": "app_reviews",
+          "source_span": {"start": 0, "end": 47},
+          "quote": "crashes the second I open it since the iOS update",
+          "aspect": "stability",
+          "sentiment": "negative"
+        }
+      ]
+    },
+    "causal_hypothesis": {
+      "state": "inconclusive",
+      "text": "Cold-start crash coincides with both the iOS 18.2 rollout and our own 4.2.1 release; evidence cannot separate them.",
+      "evidence_checks": [
+        {"name": "temporal_precedence", "result": "ambiguous"},
+        {"name": "cohort_specificity", "result": "fail"},
+        {"name": "magnitude", "result": "pass"}
+      ],
+      "alternative_events": ["EVT-ios-18.2-rollout", "EVT-release-4.2.1"]
+    },
+    "fix_link": null,
+    "outcome_measurement": null,
+    "regression_watch": {"armed": false, "status": "not_armed", "reason": "issue not yet resolved"}
+  },
+  {
+    "issue_id": "ISS-1150",
+    "title": "1-star spike citing pricing change",
+    "state": "quarantined",
+    "first_seen": "2026-07-17T00:00:00Z",
+    "last_seen": "2026-07-17T06:00:00Z",
+    "source_channels": ["app_reviews"],
+    "affected_segments": {
+      "platform": "all",
+      "app_version": "4.3.0",
+      "plan_tier": "free",
+      "cohort_size": 264,
+      "min_cohort_size_enforced": 50
+    },
+    "severity": {"score": null, "note": "severity not computed while quarantined; burst held for human review"},
+    "prevalence": {"estimate_pct": null, "method": "quarantined", "uncertainty_interval_pct": null, "basis": "not estimated until burst is cleared"},
+    "changepoint": {"detected_at": "2026-07-17T00:00:00Z", "method": "CUSUM", "fdr_controlled": true, "aligned_event": "EVT-pricing-change-2026-07-16"},
+    "quarantine": {
+      "status": "held_for_human_review",
+      "reason": "review_bomb_suspected",
+      "signals": {"source_concentration": 0.94, "median_account_age_days": 2, "burst_window_hours": 6},
+      "note": "Deterministic anomaly checks on source concentration and account age quarantined this burst; it does not enter the registry as a live issue until a human clears it."
+    },
+    "evidence": {
+      "total_quote_count": 264,
+      "sample_quotes": [
+        {
+          "feedback_id": "FB-93901",
+          "channel": "app_reviews",
+          "source_span": {"start": 0, "end": 38},
+          "quote": "new pricing is a scam, uninstalling now",
+          "aspect": "pricing",
+          "sentiment": "negative"
+        }
+      ]
+    },
+    "causal_hypothesis": {"state": "observed_signal", "text": "No hypothesis drafted; burst quarantined pending human review.", "evidence_checks": [], "alternative_events": []},
+    "fix_link": null,
+    "outcome_measurement": null,
+    "regression_watch": {"armed": false, "status": "not_armed", "reason": "quarantined, not a resolved issue"}
+  },
+  {
+    "issue_id": "ISS-1033",
+    "title": "Battery drain blamed on new home-screen widget",
+    "state": "growing",
+    "first_seen": "2026-06-20T14:00:00Z",
+    "last_seen": "2026-07-19T09:00:00Z",
+    "source_channels": ["app_reviews", "social_mentions"],
+    "affected_segments": {
+      "platform": "Android",
+      "app_version": "4.2.1",
+      "plan_tier": "mixed",
+      "cohort_size": 187,
+      "min_cohort_size_enforced": 50
+    },
+    "severity": {"score": 0.52, "volume": 187, "velocity_per_day": 8.4, "emotional_intensity": 0.58, "customer_weight": 1.1},
+    "prevalence": {
+      "estimate_pct": 1.7,
+      "method": "selection_bias_adjusted",
+      "uncertainty_interval_pct": [1.0, 2.7],
+      "basis": "joined to background-CPU telemetry"
+    },
+    "changepoint": {
+      "detected_at": "2026-06-05T00:00:00Z",
+      "method": "PELT",
+      "fdr_controlled": true,
+      "aligned_event": "EVT-background-sync-change-2026-06-04",
+      "alignment_lag_hours": 12
+    },
+    "evidence": {
+      "total_quote_count": 52,
+      "sample_quotes": [
+        {
+          "feedback_id": "FB-86622",
+          "channel": "social_mentions",
+          "source_span": {"start": 0, "end": 63},
+          "quote": "the new widget is eating my battery, deleted it and still draining",
+          "aspect": "battery",
+          "sentiment": "negative"
+        }
+      ]
+    },
+    "causal_hypothesis": {
+      "state": "contradicted",
+      "text": "Users blame the 4.2.1 widget, but the battery-drain changepoint precedes the widget release by two weeks and aligns to a background-sync change.",
+      "evidence_checks": [
+        {"name": "temporal_precedence", "result": "fail"},
+        {"name": "cohort_specificity", "result": "pass"},
+        {"name": "magnitude", "result": "pass"}
+      ],
+      "alternative_events": ["EVT-background-sync-change-2026-06-04"]
+    },
+    "fix_link": null,
+    "outcome_measurement": null,
+    "regression_watch": {"armed": false, "status": "not_armed", "reason": "issue not yet resolved"}
+  },
+  {
+    "issue_id": "ISS-0854",
+    "title": "Onboarding drop-off after mandatory phone verification",
+    "state": "resolved",
+    "first_seen": "2026-04-25T08:00:00Z",
+    "last_seen": "2026-06-30T17:00:00Z",
+    "source_channels": ["nps_verbatims", "support_tickets"],
+    "affected_segments": {
+      "platform": "all",
+      "app_version": "4.1.0",
+      "plan_tier": "free",
+      "cohort_size": 623,
+      "min_cohort_size_enforced": 50
+    },
+    "severity": {"score": 0.71, "volume": 623, "velocity_per_day": 14.9, "emotional_intensity": 0.55, "customer_weight": 1.4},
+    "prevalence": {
+      "estimate_pct": 12.3,
+      "method": "selection_bias_adjusted",
+      "uncertainty_interval_pct": [10.8, 13.9],
+      "basis": "joined to onboarding-funnel events; drop-off at verification step"
+    },
+    "changepoint": {
+      "detected_at": "2026-04-24T00:00:00Z",
+      "method": "CUSUM",
+      "fdr_controlled": true,
+      "aligned_event": "EVT-mandatory-phone-verification-2026-04-24",
+      "alignment_lag_hours": 8
+    },
+    "evidence": {
+      "total_quote_count": 77,
+      "sample_quotes": [
+        {
+          "feedback_id": "FB-71204",
+          "channel": "nps_verbatims",
+          "source_span": {"start": 0, "end": 66},
+          "quote": "wanted to try it but bailed when it demanded my phone number to sign up",
+          "aspect": "onboarding",
+          "sentiment": "negative"
+        }
+      ]
+    },
+    "causal_hypothesis": {
+      "state": "supported",
+      "text": "Making phone verification mandatory at signup caused the onboarding drop-off.",
+      "evidence_checks": [
+        {"name": "temporal_precedence", "result": "pass"},
+        {"name": "cohort_specificity", "result": "pass"},
+        {"name": "magnitude", "result": "pass"}
+      ],
+      "alternative_events": []
+    },
+    "fix_link": {"fix_ref": "EVT-make-verification-optional-2026-06-12", "shipped_at": "2026-06-12T00:00:00Z", "linked_by": "pm.leah"},
+    "outcome_measurement": {
+      "method": "cohort_comparison",
+      "signal_change": "fell_below_baseline",
+      "control_cohort": "users_in_gradual_rollout_holdout",
+      "pre_rate_per_day": 14.9,
+      "post_rate_per_day": 2.2,
+      "grade": "fix_held",
+      "limitations": "control cohort was a rollout holdout, not randomized"
+    },
+    "regression_watch": {"armed": true, "status": "clear", "threshold_per_day": 6.0}
+  }
+]
