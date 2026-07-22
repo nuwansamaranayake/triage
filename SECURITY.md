@@ -35,3 +35,9 @@ No provider SDK is called directly; the `groundwork` gateway reads `OPENROUTER_A
 environment and pins model IDs. `.env` is gitignored and never committed; `.env.example` ships with
 blank keys. The demo runs on synthetic data with **no keys set at all** — keys are required only for
 Phase 1 extraction, persistence, and migrations.
+
+## Reporting a vulnerability
+
+Report suspected vulnerabilities privately to **nuwans@hotmail.com**. Do not open a public issue.
+You will receive an acknowledgment within 72 hours. Please allow time to investigate and ship a fix
+before any public disclosure; a coordinated disclosure timeline will be agreed with you.

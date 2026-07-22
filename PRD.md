@@ -49,3 +49,14 @@ achieved results. The harness currently raises `NotImplementedError` on purpose 
 - **Span fidelity** of extracted quotes, audited with an NLI entailment gate.
 
 Each metric is published per release once the harness is implemented.
+
+## Novelty (scoped)
+
+As of July 2026, we surveyed the open-source and low-cost end of the customer-feedback and
+product-analytics field: feedback aggregators, review-mining tools, NPS and CX analytics platforms,
+and support-ticket taxonomy dashboards. Across that surveyed set we found none built as an issue
+tracker that combines causal timeline alignment, guarded hypothesis states, bias-corrected
+prevalence, post-fix outcome grading, and regression watches in one system. Individual pieces exist
+in isolation; the combination, wired into a state-machine issue registry where sentiment is a
+prioritization input rather than the headline metric, is the bet. This is a scoped claim about the
+field we reviewed as of July 2026, not a proof that no such tool exists anywhere.
