@@ -1,7 +1,7 @@
 {
   "description": "Golden feedback set for the Phase 1 deterministic eval. 30 synthetic items across four known clusters; labeled items carry pre-labeled aspects, unlabeled ones must be embedding-assigned. reference_now fixes the severity clock so the report is byte-reproducible. The severity ordering is planted: crash_login is the most frequent AND most recent, dark_mode the least of both and neutral.",
   "reference_now": "2026-07-01T00:00:00Z",
-  "expected_severity_order": ["crash_login", "slow_sync", "billing_charge", "dark_mode"],
+  "expected_severity_order": ["crash_login", "slow_sync", "bill_charge", "dark_mode"],
   "transitions": {
     "legal": [
       ["new", "triaged"],
@@ -76,22 +76,22 @@
     {"id": 19, "submitted_at": "2026-06-16T14:00:00Z", "golden_cluster": "slow_sync",
      "text": "Everything syncs so slow lately, minutes instead of seconds."},
 
-    {"id": 20, "submitted_at": "2026-06-08T10:00:00Z", "golden_cluster": "billing_charge",
+    {"id": 20, "submitted_at": "2026-06-08T10:00:00Z", "golden_cluster": "bill_charge",
      "text": "I was charged twice on my billing statement this month.",
      "aspects": [{"label": "billing charge", "sentiment": "negative", "quote": "charged twice on my billing statement"}]},
-    {"id": 21, "submitted_at": "2026-06-06T09:00:00Z", "golden_cluster": "billing_charge",
+    {"id": 21, "submitted_at": "2026-06-06T09:00:00Z", "golden_cluster": "bill_charge",
      "text": "Billing charged me for the annual plan I cancelled.",
      "aspects": [{"label": "billing charge", "sentiment": "negative", "quote": "Billing charged me"}]},
-    {"id": 22, "submitted_at": "2026-06-05T15:00:00Z", "golden_cluster": "billing_charge",
+    {"id": 22, "submitted_at": "2026-06-05T15:00:00Z", "golden_cluster": "bill_charge",
      "text": "Double charge on billing again, please refund.",
      "aspects": [{"label": "billing charge", "sentiment": "negative", "quote": "Double charge on billing"}]},
-    {"id": 23, "submitted_at": "2026-06-03T12:00:00Z", "golden_cluster": "billing_charge",
+    {"id": 23, "submitted_at": "2026-06-03T12:00:00Z", "golden_cluster": "bill_charge",
      "text": "My card shows a billing charge I never authorized.",
      "aspects": [{"label": "billing charge", "sentiment": "negative", "quote": "billing charge I never authorized"}]},
-    {"id": 24, "submitted_at": "2026-06-01T08:00:00Z", "golden_cluster": "billing_charge",
+    {"id": 24, "submitted_at": "2026-06-01T08:00:00Z", "golden_cluster": "bill_charge",
      "text": "Charged the wrong amount on my billing cycle.",
      "aspects": [{"label": "billing charge", "sentiment": "negative", "quote": "Charged the wrong amount"}]},
-    {"id": 25, "submitted_at": "2026-06-04T16:00:00Z", "golden_cluster": "billing_charge",
+    {"id": 25, "submitted_at": "2026-06-04T16:00:00Z", "golden_cluster": "bill_charge",
      "text": "There is an extra charge on my billing statement I cannot explain."},
 
     {"id": 26, "submitted_at": "2026-05-20T10:00:00Z", "golden_cluster": "dark_mode",

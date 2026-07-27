@@ -50,3 +50,53 @@ the *diagnosed* root cause separately (Standard 5).
   step the README gives a stranger); Dockerfile installs git before `pip install`.
 - **Doctrine link**: Standard 1 (root cause from the real log, not a retry) and Standard 2 (the
   smoke gate exists to catch exactly this before anyone calls the estate "green").
+
+## FAIL-0004 — Phase 1 venv build died in a pip build subprocess (truststore recursion)
+
+- **Date**: 2026-07-27
+- **Surface**: local Phase 1 toolchain (`pip install -e ../groundwork` into a fresh venv)
+- **Reported symptom**: `RecursionError: maximum recursion depth exceeded` deep inside
+  `ssl.py` while pip built the groundwork editable install.
+- **Diagnosed cause**: `sitecustomize.py` (truststore `inject_into_ssl()`, required on this
+  machine because the AV MITMs TLS) was written into the venv **before** the installs ran.
+  pip's build-isolation subprocess imports sitecustomize and pip itself already integrates
+  truststore, so SSL context attribute access recursed until the interpreter died.
+- **Root cause**: injection ordering — runtime TLS shimming applied to build-time
+  subprocesses that already carry their own truststore integration.
+- **Fix**: install every dependency first, write `sitecustomize.py` last. The shim is needed
+  for runtime LLM calls (httpx/OpenAI client), not for pip.
+- **Doctrine link**: Standard 1 (the fix is the ordering, not a pip retry).
+
+## FAIL-0005 — Second triage run crashed on datetime math (sqlite test engine)
+
+- **Date**: 2026-07-27
+- **Surface**: `POST /api/v1/triage/run` under pytest (injected sqlite engine)
+- **Reported symptom**: `TypeError: can't subtract offset-naive and offset-aware datetimes`
+  in the severity formula.
+- **Diagnosed cause**: `feedback_items.submitted_at` is `DateTime(timezone=True)`. Postgres
+  returns tz-aware values; sqlite (the test engine) returns naive ones. The severity clock
+  is always tz-aware, so the subtraction blew up only on DB read-back paths.
+- **Root cause**: dialect difference in datetime round-tripping, unhandled at the read
+  boundary.
+- **Fix**: normalize datetimes to tz-aware UTC at the DB read boundary in the triage loop
+  (`_aware()` in app/routes.py). Caught by `tests/test_api.py` before the code ever ran
+  against Postgres.
+- **Doctrine link**: Standard 1 (fix the boundary, not the formula) and the test gate.
+
+## FAIL-0006 — First real LLM eval: paraphrase jaccard 0.29 against a 0.60 contract
+
+- **Date**: 2026-07-27
+- **Surface**: `scripts/eval_llm.py` (key-gated, google/gemini-2.5-flash via the gateway)
+- **Reported symptom**: planted-aspect recall 1.00 PASS, paraphrase jaccard 0.29 FAIL —
+  the aspect-extraction stability contract missed by half.
+- **Diagnosed cause (from a labeled debug run)**: on one paraphrase the model named aspects
+  by the user's action ("coupon code application", "syncing with laptop") instead of the
+  component+problem ("checkout crash", "slow sync"), and `canonicalize()` could not unify
+  morphological variants — "syncing" did not reduce to "sync" — so anchor sets diverged.
+- **Root cause**: two, both in our layer: an underspecified labeling instruction in the
+  extraction prompt, and a stemmer with no gerund rule in the canonical identity function.
+- **Fix**: prompt now requires component+problem noun-phrase labels; `_stem()` gained an
+  `-ing` rule ("syncing"/"sync", "billing"/"bill" — golden keys updated to the new
+  canonical forms). Observed after the fix: recall 1.00, paraphrase jaccard min 0.86.
+- **Doctrine link**: the flywheel duty — the Seismograph contract exists precisely to catch
+  label instability before it reaches clustering; bounds were not lowered to pass.

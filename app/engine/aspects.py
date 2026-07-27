@@ -39,7 +39,11 @@ _STOPWORDS = {"the", "a", "an", "of", "on", "in", "for", "with", "and", "or", "t
 
 
 def _stem(tok: str) -> str:
-    """Tiny deterministic suffix rule, enough to unify singular/plural label variants."""
+    """Tiny deterministic suffix rules, enough to unify plural and gerund label variants
+    ('crashes'/'crash', 'syncing'/'sync', 'billing'/'bill'). Observed live (FAIL-0005):
+    without the -ing rule, paraphrase anchors diverged and the stability contract failed."""
+    if len(tok) > 5 and tok.endswith("ing"):
+        return tok[:-3]
     if len(tok) > 4 and tok.endswith("es"):
         return tok[:-2]
     if len(tok) > 3 and tok.endswith("s") and not tok.endswith("ss"):
@@ -130,11 +134,13 @@ def extract_aspects(
         messages=[
             {"role": "system",
              "content": ("Extract the product aspects this customer feedback is about. One "
-                         "aspect per entry: the concrete thing praised, requested, or "
-                         "broken (e.g. 'login crash', 'sync speed', 'billing charge'), its "
-                         "sentiment, and a one-sentence statement. quote is a VERBATIM "
-                         "substring of the feedback that evidences the aspect. Never infer "
-                         "aspects that are not in the text. Return JSON.")},
+                         "aspect per entry. label is a short noun phrase naming the product "
+                         "component plus the problem or request (e.g. 'checkout crash', "
+                         "'slow sync', 'billing charge') — never the user's action or the "
+                         "wording of the complaint. Give the aspect's sentiment and a "
+                         "one-sentence statement. quote is a VERBATIM substring of the "
+                         "feedback that evidences the aspect. Never infer aspects that are "
+                         "not in the text. Return JSON.")},
             {"role": "user", "content": feedback_text},
         ],
         json_schema=EXTRACTION_SCHEMA,
