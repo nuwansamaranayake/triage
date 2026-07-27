@@ -96,9 +96,12 @@ pip install -e .[dev]
 Then, in another shell:
 
 ```bash
-export API_PORT=8000 SMOKE_TEST_TOKEN=dev && python scripts/smoke_test.py   # POSIX -> SMOKE OK
-set API_PORT=8000 && set SMOKE_TEST_TOKEN=dev && python scripts/smoke_test.py  # Windows
+export API_PORT=8000 SMOKE_TEST_TOKEN=dev-smoke-token && python scripts/smoke_test.py   # POSIX -> SMOKE OK
+set API_PORT=8000 && set SMOKE_TEST_TOKEN=dev-smoke-token && python scripts/smoke_test.py  # Windows
 ```
+
+The token must match `SMOKE_TEST_TOKEN` in your `.env` (the server side); `.env.example` sets
+`dev-smoke-token`, so the export above works against an unmodified `cp .env.example .env`.
 
 Zero-key paths that work out of the box: `python -m app.cli triage --data
 data/synthetic/golden/golden.json` runs the full deterministic loop in memory (no database,

@@ -40,8 +40,13 @@ def free_port() -> int:
 
 def smoke() -> None:
     port = free_port()
+    # One token injected into BOTH sides. Env vars override .env in pydantic-settings, so
+    # whatever the local .env holds, the server enforces this token and the client sends
+    # it — bearer auth is exercised for real on every gate run (Standard 2).
+    token = os.environ.get("SMOKE_TEST_TOKEN") or "dev"
     env = os.environ.copy()
-    env.update({"APP_ENV": "development", "API_HOST": "127.0.0.1", "API_PORT": str(port)})
+    env.update({"APP_ENV": "development", "API_HOST": "127.0.0.1", "API_PORT": str(port),
+                "SMOKE_TEST_TOKEN": token})
     server = subprocess.Popen(
         [PY, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(port),
          "--log-level", "warning"],
@@ -60,7 +65,7 @@ def smoke() -> None:
             fail("smoke: server never became healthy")
         r = run("smoke", [PY, "scripts/smoke_test.py"], 60,
                 {"API_HOST": "127.0.0.1", "API_PORT": str(port),
-                 "SMOKE_TEST_TOKEN": os.environ.get("SMOKE_TEST_TOKEN", "dev")})
+                 "SMOKE_TEST_TOKEN": token})
         if r.returncode != 0 or "SMOKE OK" not in r.stdout:
             fail(f"smoke: {r.stdout.strip()} {r.stderr.strip()}"[:300])
         print("GATE smoke: PASS")
