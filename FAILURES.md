@@ -100,3 +100,33 @@ the *diagnosed* root cause separately (Standard 5).
   canonical forms). Observed after the fix: recall 1.00, paraphrase jaccard min 0.86.
 - **Doctrine link**: the flywheel duty — the Seismograph contract exists precisely to catch
   label instability before it reaches clustering; bounds were not lowered to pass.
+
+## FAIL-0007 — Adversarial review wave: 10 confirmed findings before release
+
+- **Date**: 2026-07-27
+- **Surface**: whole repo (Dockerfile, `app/routes.py`, `scripts/gate.py`,
+  `scripts/check_migrations.py`, CI, contracts.md)
+- **Reported symptom**: none — every gate was observed green. An adversarial code review
+  against the phase-1 tree confirmed 10 defects the gates never exercised (1 critical,
+  3 major, 6 minor; 1 further claim refuted on inspection).
+- **Worst findings**: (1) no `.dockerignore`, so `COPY . .` baked the local `.env` — a live
+  `OPENROUTER_API_KEY` — and full git history into image layers; (2) the LLM extraction
+  endpoint ran its network call inside an open DB transaction, so a hung provider could pin
+  pooled connections and stall every other endpoint; (3) the same endpoint was not
+  idempotent — a retry appended duplicate claims, flipping sentiment majorities and
+  silently deflating severity ~2.5x; (4) the gate's smoke client and the server it started
+  could disagree on `SMOKE_TEST_TOKEN`, meaning the observed-green gate had never actually
+  exercised bearer auth.
+- **Root cause**: the gates asserted the happy path they were written for; nothing
+  adversarial probed retry behavior, concurrency, container build context, or whether the
+  gate's own auth leg was live. Green gates measure what they measure — nothing else.
+- **Fix**: all 10 findings fixed in this wave (`.dockerignore`; read-LLM-write restructure;
+  delete-and-replace idempotency; state-guarded transition UPDATE with typed 409;
+  external_id in dedup identity; lexicographic label tie-break; token injected into both
+  gate sides; `check_migrations.py` fails loud when `EXPECTED_TABLE_COUNT` is unset; CI
+  install fallbacks removed; contracts.md claim backed by a real test). Each
+  behavior-changing fix carries a regression test. The OpenRouter key is treated as
+  exposed-if-ever-built and must be rotated.
+- **Doctrine link**: Standard 2 (the smoke that "passed" was not exercising auth) and the
+  review discipline — an adversarial pass caught before release what observed-green gates
+  structurally could not.

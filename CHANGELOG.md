@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Adversarial review wave (10 findings, see FAILURES.md FAIL-0007): LLM aspect extraction
+  no longer runs its network call inside an open DB transaction (read session closes
+  before the gateway call; results land in a second, short write transaction), and a
+  retried extract now replaces the item's previous `llm_extracted` claims instead of
+  appending duplicates that skewed the sentiment majority and severity.
+- Issue transitions use a state-guarded UPDATE: a concurrent transition that lands first
+  turns the second request into a typed 409 (`concurrent_transition`) instead of a
+  duplicate/self-loop transition row.
+- Import dedup identity now includes `external_id` when present, so distinct records with
+  identical text from the same source count as distinct observations.
+- Cluster label majority tie-breaks are lexicographic (total order) instead of set
+  iteration order, which varied with `PYTHONHASHSEED` across processes.
+- `scripts/gate.py` injects one `SMOKE_TEST_TOKEN` into both the uvicorn server and the
+  smoke client, so bearer auth is exercised for real on every gate run regardless of the
+  local `.env`; README smoke exports aligned with `.env.example` (`dev-smoke-token`).
+- `scripts/check_migrations.py` exits nonzero when `EXPECTED_TABLE_COUNT` is unset or not
+  a positive integer — the Standard 4 gate can no longer pass vacuously.
+- CI test job install fallbacks removed: a dependency-resolution failure now fails the
+  install step with its real error instead of limping into pytest with an incomplete set.
+- contracts.md's CI claim is now backed by `tests/test_contracts.py`, which asserts every
+  `implemented` row against the app's OpenAPI spec.
+
+### Security
+- Added `.dockerignore` excluding `.env`, `.git`, caches, and local state: `COPY . .` was
+  baking the local `.env` (live `OPENROUTER_API_KEY`) and full git history into image
+  layers. The key must be rotated if any image was ever built and shared from this tree.
+
 ### Added
 - Phase 1 core loop (branch `phase-1`): keyless bulk JSON/CSV import with deterministic
   content-hash dedup and pre-labeled span-anchored aspect claims; key-gated LLM aspect
