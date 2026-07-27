@@ -36,7 +36,7 @@ contract ships with the LLM stage).
 - [x] M6  flywheel: contracts/aspect-extraction-stability.yaml (Seismograph DSL, validated
          via the Seismograph loader); key-gated eval_llm.py observed for real (recall +
          paraphrase jaccard on canonical anchors)
-- [ ] M7  CI eval -> required; README/contracts.md/CHANGELOG/EVAL.md truth pass; full gate +
+- [x] M7  CI eval -> required; README/contracts.md/CHANGELOG/EVAL.md truth pass; full gate +
          migration check + prod-guard + byte-reproducibility check
 
 ## DECISION log
@@ -68,4 +68,11 @@ contract ships with the LLM stage).
 
 ## Next task
 
-M7 finish: run the full gate suite (gate.py, migration check, prod-guard, byte-reproducibility) and record observed results.
+NONE — Phase 1 GATES_PASSED (2026-07-27). All DONE-WHEN items observed: gate.py exit 0
+(GATE ruff/pytest/smoke/eval all PASS — 41 pytest, live keyless business-loop smoke,
+eval bounds purity 1.0 / coverage 1.0 / legality 1.0 / monotonicity 1.0), MIGRATION OK: 9
+tables against the throwaway Postgres, prod-guard under APP_ENV=production (demo -> 503,
+GET /api/v1/issues -> 200), eval byte-reproducibility (two runs, cmp identical), flywheel
+contract validated by the Seismograph loader (plan ab3252c58501306b), key-gated LLM eval
+observed for real (recall 1.00, paraphrase jaccard min 0.86 — after FAIL-0006 was fixed at
+the root, not by lowering the bound). Branch `phase-1`, NOT pushed.
