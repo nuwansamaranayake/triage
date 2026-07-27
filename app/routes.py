@@ -268,7 +268,8 @@ def _latest_severity(s, iid: int):
 
 
 @router.get("/issues")
-def list_issues():
+def list_issues(authorization: str | None = Header(default=None)):
+    _auth(authorization)
     with db.get_session() as s:
         rows = s.execute(
             sa.select(db.issues, db.clusters.c.cluster_key)
@@ -287,7 +288,8 @@ def list_issues():
 
 
 @router.get("/issues/{iid}")
-def get_issue(iid: int):
+def get_issue(iid: int, authorization: str | None = Header(default=None)):
+    _auth(authorization)
     with db.get_session() as s:
         issue = s.execute(
             sa.select(db.issues, db.clusters.c.cluster_key)
