@@ -9,6 +9,33 @@ their evidence; and its post-fix grades match what actually happened. A tool tha
 reopens them can be wrong — so "good" is defined by measured behavior against a known-truth stream,
 not by prose.
 
+## Phase 1 acceptance thresholds (written before the harness, 2026-07-27)
+
+Phase 1 ships the deterministic core of the issue tracker (bulk import, aspect claims,
+seeded clustering, issue registry state machine, severity formula), so its bounds measure
+that core. The suite is deterministic and keyless: a golden feedback set of 30 synthetic
+items with labeled aspects, known cluster assignments, planted illegal state transitions,
+and a planted severity ordering; the deterministic HashingEmbedder and a fixed reference
+clock (read from the golden file, never wall time) keep it byte-reproducible as a required
+CI check. `scripts/eval.py` exits nonzero on any miss.
+
+| Metric | Definition | Bound |
+|---|---|---|
+| Cluster purity | weighted mean purity of built clusters against the golden cluster labels | >= 0.85 |
+| Assignment coverage | fraction of golden items assigned to some cluster (guards purity against vacuous passes) | >= 0.90 |
+| State-machine legality | every planted legal transition accepted AND every planted illegal transition rejected with the typed error | = 1.00 |
+| Severity monotonicity | every planted ordering pair (the more frequent and more recent issue) scores strictly higher, and duplicating an issue's item multiset strictly raises its score | = 1.00 |
+| Reproducibility | two consecutive `make eval` runs | identical reports |
+
+Aspect-extraction quality (the LLM stage) is measured separately and key-gated —
+`scripts/eval_llm.py` observes planted-aspect recall >= 0.70 through the real gateway and
+paraphrase jaccard >= 0.60 on canonicalized aspect anchors (never on raw model labels; the
+Seismograph contract in `contracts/aspect-extraction-stability.yaml` states the same
+invariant). It is reported when a key is present, never a required keyless check, and never
+silently skipped: the deterministic report states loudly when the key-gated section did not
+run. The detection-lag, changepoint, hypothesis, outcome, and span-NLI metrics below join in
+Phase 2/3 with the code they measure.
+
 ## How `make eval` will measure it
 
 Evaluation is planted-defect, driven by the portfolio's Seismograph harness: synthetic feedback
