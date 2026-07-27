@@ -15,5 +15,3 @@ severity dark_mode: frequency=5 recency=0.3211 impact=0.4000 score=0.6422
 | assignment_coverage | 1.0 | >= 0.9 | PASS |
 | state_machine_legality | 1.0 | >= 1.0 | PASS |
 | severity_monotonicity | 1.0 | >= 1.0 | PASS |
-
-key-gated extraction section: run scripts/eval_llm.py (not part of this deterministic report)
