@@ -1,15 +1,17 @@
 # API Contracts: Triage
 
-Standard 6: every frontend call maps to exactly one backend endpoint, and CI diffs this file against
-the live OpenAPI spec served at `/openapi.json` (Swagger UI at `/docs`). The frontend is deferred to
-Phase 2, so the "Frontend call" column names the planned view or action that will consume each
-endpoint; the Phase 1 endpoints below are implemented and exercised live by the smoke test.
+Standard 6: every frontend call maps to exactly one backend endpoint. The CI test job runs
+`tests/test_contracts.py`, which parses this table and asserts every `implemented` row exists in the
+app's OpenAPI route table (the same spec served at `/openapi.json`; Swagger UI at `/docs`). The
+frontend is deferred to Phase 2, so the "Frontend call" column names the planned view or action that
+will consume each endpoint; the Phase 1 endpoints below are implemented and exercised live by the
+smoke test.
 
 | Frontend call (Phase 2) | Method | Path | Status | Notes |
 |---|---|---|---|---|
 | — (liveness probe) | GET | `/health` | implemented | Returns `{status, env}`. Used by smoke test and ops. |
 | — (dev demo only) | GET | `/api/v1/demo` | implemented | Returns `{items:[...]}` from `data/synthetic/`. Development-only; **503** outside development per Standard 3. |
-| — (API discovery) | GET | `/openapi.json`, `/docs` | implemented | OpenAPI spec + Swagger UI, served by FastAPI. CI diffs this file against the spec. |
+| — (API discovery) | GET | `/openapi.json`, `/docs` | implemented | OpenAPI spec + Swagger UI, served by FastAPI. `tests/test_contracts.py` checks this table against the spec in CI. |
 | Ingest feedback batch | POST | `/api/v1/feedback/import` | implemented | Keyless bulk connector: JSON `items` or `csv_text` (exactly one), deterministic content-hash dedup, optional pre-labeled aspects stored as span-anchored claims. |
 | Extract aspects (LLM) | POST | `/api/v1/feedback/{id}/aspects/extract` | implemented | Key-gated via the groundwork gateway (strict JSON schema); typed **503** without `OPENROUTER_API_KEY`. Rejected span anchors kept, never dropped. |
 | Run triage loop | POST | `/api/v1/triage/run` | implemented | Deterministic: aspect-key-seeded clustering + embedding assignment, issue registry upsert, severity history append. **422** when there is nothing to triage. |
