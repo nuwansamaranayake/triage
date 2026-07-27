@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-27
+
+> **BREAKING.** Business read endpoints now require the same bearer token as writes.
+> **Migration:** send `Authorization: Bearer $SMOKE_TEST_TOKEN` on GET requests too.
+> Unauthenticated reads previously returned data and now return 401. Development is
+> unaffected while the token is empty.
+
+### Eval
+- cluster purity 1.0 (>= 0.85), assignment coverage 1.0 (>= 0.90), state-machine legality
+  1.0 (= 1.00), severity monotonicity 1.0 (= 1.00). Byte-reproducible.
+
+### Changed
+- Unused `sentence-transformers` (CUDA torch) dropped; image 5.61 GB -> 607 MB.
+- `scripts/gate.py` enumerates routes and fails on any unguarded non-public route.
+
 ### Removed
 - Unused `sentence-transformers` dependency (and the CUDA torch stack it pulled). No Phase 1
   code imports it; production images drop from ~5.7 GB toward the ~0.5 GB baseline

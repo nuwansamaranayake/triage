@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "triage"
-version = "0.2.0"
+version = "0.3.0"
 description = "A customer-feedback analyzer that turns feedback into a deterministic issue tracker with sentiment."
 readme = "README.md"
 requires-python = ">=3.12"
