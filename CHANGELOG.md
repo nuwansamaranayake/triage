@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Phase 1 core loop (branch `phase-1`): keyless bulk JSON/CSV import with deterministic
+  content-hash dedup and pre-labeled span-anchored aspect claims; key-gated LLM aspect
+  extraction via the groundwork gateway (typed 503 without a key); deterministic
+  aspect-key-seeded clustering with hashing-embedding assignment; issue registry with the
+  `new -> triaged -> in_progress -> fixed -> verified` state machine (illegal transitions
+  rejected with a typed 409); documented severity formula
+  (frequency x recency_weight x impact_weight, monotone in frequency); severity history;
+  CLI `python -m app.cli triage`.
+- Schema: 8 app tables applied from `app.db.metadata` by alembic `0002_real_schema`;
+  observed `MIGRATION OK: 9 tables` (`EXPECTED_TABLE_COUNT=9`).
+- Eval harness (`scripts/eval.py`), bounds written before the code: observed cluster
+  purity 1.0, assignment coverage 1.0, state-machine legality 1.0, severity
+  monotonicity 1.0; byte-reproducible report; CI eval job flipped to
+  "eval (required)".
+- Key-gated LLM eval (`scripts/eval_llm.py`) observed for real on
+  google/gemini-2.5-flash: planted-aspect recall 1.00, paraphrase jaccard (min) 0.86 on
+  canonical anchors; Seismograph stability contract
+  `contracts/aspect-extraction-stability.yaml` validated against the Seismograph DSL
+  loader.
+- Failure gallery entries FAIL-0004..0006 (truststore/pip recursion, sqlite naive
+  datetimes, paraphrase label instability) with root-cause fixes.
+
 ### Changed
 - Dependency on `aignite-groundwork` switched from an editable path source to a pinned git
   dependency (`git+https://github.com/nuwansamaranayake/groundwork@v0.1.0`) so standalone clones and CI resolve

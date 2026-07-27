@@ -55,12 +55,15 @@ Red-team prompt-injection cases (feedback text that tries to issue instructions)
 per the Security and Trust Baseline. Results are published per release once the harness is
 implemented.
 
-## Current status: not yet implemented
+## Status
 
-`make eval` runs `scripts/eval.py`, which **raises `NotImplementedError` on purpose** today. The
-thresholds and metrics above are **targets the Phase-1 harness will enforce**, not measurements that
-have been taken. Implementing the harness so `make eval` gates releases is an explicit Phase-1
-deliverable (see ROADMAP.md). Until then, any claim of a passing eval would itself be the kind of
-silent-success theater the doctrine forbids — so the harness fails loud instead.
-
-Once implemented, a release is gated on the eval report: no green eval, no release.
+The Phase 1 harness is real: `scripts/eval.py` enforces the acceptance table above (first
+published run 2026-07-27 — cluster purity 1.0, assignment coverage 1.0, state-machine
+legality 1.0, severity monotonicity 1.0, all PASS, byte-reproducible; `eval_report.md`).
+The CI eval job is required. The key-gated section (`scripts/eval_llm.py`) was observed
+for real on google/gemini-2.5-flash: planted-aspect recall 1.00 and paraphrase jaccard
+(min) 0.86 on canonical anchors (`eval_report_llm.md`) — its first run FAILED the 0.60
+jaccard bound at 0.29 and the root causes were fixed in the prompt and the canonical
+stemmer, not by lowering the bound (FAILURES.md FAIL-0006). The detection-lag,
+changepoint, hypothesis, outcome, and span-NLI metrics below join in Phase 2/3 with the
+code they measure. A release is gated on the eval report: no green eval, no release.

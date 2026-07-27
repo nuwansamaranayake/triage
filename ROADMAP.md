@@ -9,6 +9,17 @@ public project board so planning and delivery discipline are visible in the comm
 
 The first honest slice: one source, real extraction, and issues as entities.
 
+> **Status (2026-07-27): the Phase 1 core loop is built** on branch `phase-1` as a
+> deliberately narrower cut than the full list below, and the differences are stated, not
+> hidden: the registry ships a workflow state machine (`new -> triaged -> in_progress ->
+> fixed -> verified`, illegal moves rejected with a typed 409) rather than the
+> measured-lifecycle states, and severity is `frequency x recency_weight x impact_weight`
+> (sentiment-based impact) rather than the full customer-weighted formula. Bulk JSON/CSV
+> import with dedup, key-gated LLM aspect extraction plus a keyless pre-labeled path,
+> seeded clustering, and the required eval harness are real (see EVAL.md for observed
+> numbers). Spam filtering, PII redaction, the NLI quote audit, measured-lifecycle
+> transitions with hysteresis, and customer weighting remain open Phase 1 items.
+
 - **One source: app reviews.** Deterministic ingestion — dedup, spam filter, PII redaction — before
   any model call.
 - **Aspect and quote extraction (LLM).** Span-anchored claims; every quote resolves to an exact

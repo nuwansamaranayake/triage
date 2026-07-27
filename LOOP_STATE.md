@@ -15,25 +15,25 @@ contract ships with the LLM stage).
 ## Milestones (commit each; gate.py after each)
 
 - [x] M1  EVAL.md numeric thresholds first; LOOP_STATE; branch `phase-1`
-- [ ] M2  engine/aspects: AspectClaim on groundwork.Claim (type issue_aspect, span-anchored
+- [x] M2  engine/aspects: AspectClaim on groundwork.Claim (type issue_aspect, span-anchored
          quote); LLM extractor via gateway (strict JSON schema); canonicalize() anchor
          tokens (model labels are not identity — CareerCompiler FAIL-0003); keyless
          pre-labeled entry path (+tests, stub gateway)
-- [ ] M3  engine/clustering: deterministic aspect-key-seeded clusters + HashingEmbedder
+- [x] M3  engine/clustering: deterministic aspect-key-seeded clusters + HashingEmbedder
          cosine assignment of unlabeled items (threshold, sorted tie-break, no LLM);
          engine/registry: state machine with typed IllegalTransition; engine/severity:
          severity = frequency x recency_weight x impact_weight, monotone in frequency
          (+tests each)
-- [ ] M4  scripts/eval.py: golden feedback set (30 items, labeled aspects, known clusters,
+- [x] M4  scripts/eval.py: golden feedback set (30 items, labeled aspects, known clusters,
          planted severity ordering, planted illegal transitions) meeting the EVAL.md bounds;
          byte-reproducible (fixed reference clock from the golden file)
-- [ ] M5  schema + alembic 0002 (sources, feedback_items, aspects, clusters,
+- [x] M5  schema + alembic 0002 (sources, feedback_items, aspects, clusters,
          cluster_members, issues, issue_transitions, severity_scores)
          EXPECTED_TABLE_COUNT=9; API: import (keyless bulk JSON/CSV), key-gated extract,
          triage run (persisted deterministic loop), issues list/detail, transition endpoint
          (409 on illegal); CLI `python -m app.cli triage`; smoke = real keyless processing
          loop; Dockerfile migrate-on-start
-- [ ] M6  flywheel: contracts/aspect-extraction-stability.yaml (Seismograph DSL, validated
+- [x] M6  flywheel: contracts/aspect-extraction-stability.yaml (Seismograph DSL, validated
          via the Seismograph loader); key-gated eval_llm.py observed for real (recall +
          paraphrase jaccard on canonical anchors)
 - [ ] M7  CI eval -> required; README/contracts.md/CHANGELOG/EVAL.md truth pass; full gate +
@@ -68,4 +68,4 @@ contract ships with the LLM stage).
 
 ## Next task
 
-M2 — engine/aspects with tests (stub gateway, no network).
+M7 finish: run the full gate suite (gate.py, migration check, prod-guard, byte-reproducibility) and record observed results.
