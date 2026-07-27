@@ -33,6 +33,22 @@ class SeverityBreakdown(BaseModel):
     score: float
 
 
+_SEVERITY_RANK = {"negative": 0, "neutral": 1, "positive": 2}
+
+
+def observation_sentiment(aspect_sentiments: list[str]) -> str:
+    """One sentiment per feedback item for scoring: the most frequent of its aspect
+    sentiments, ties breaking to the more severe. Items with no labeled aspects (assigned
+    to a cluster by embedding) count with "neutral" impact — a documented scoring rule,
+    stated here rather than assumed silently. Unknown sentiments still raise in IMPACT."""
+    if not aspect_sentiments:
+        return "neutral"
+    counts: dict[str, int] = {}
+    for s in aspect_sentiments:
+        counts[s] = counts.get(s, 0) + 1
+    return min(counts, key=lambda s: (-counts[s], _SEVERITY_RANK.get(s, 99)))
+
+
 def severity(
     observations: list[tuple[datetime, str]],
     now: datetime,
