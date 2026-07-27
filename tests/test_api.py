@@ -146,3 +146,101 @@ def test_malformed_aspects_rejected(client):
         "items": [{"text": "hello world", "submitted_at": "2026-06-01T00:00:00Z",
                    "aspects": [{"label": "ok aspect", "sentiment": "furious"}]}]})
     assert r.status_code == 422
+
+
+def test_distinct_external_ids_with_identical_text_both_import(client):
+    """Dedup identity includes external_id: two distinct records with the same text are
+    two observations, not one (undercounting frequency understates severity)."""
+    items = [
+        {"external_id": "t1", "submitted_at": "2026-07-01T00:00:00Z", "text": "Great app"},
+        {"external_id": "t2", "submitted_at": "2026-07-02T00:00:00Z", "text": "Great app"},
+    ]
+    r = client.post("/api/v1/feedback/import", json={
+        "source": {"name": "reviews", "kind": "app_reviews"}, "items": items})
+    assert r.status_code == 201, r.text
+    assert r.json()["imported"] == 2
+    assert r.json()["duplicates"] == 0
+    again = client.post("/api/v1/feedback/import", json={
+        "source": {"name": "reviews", "kind": "app_reviews"}, "items": items}).json()
+    assert again["imported"] == 0 and again["duplicates"] == 2
+
+
+def test_extract_is_idempotent_replaces_prior_llm_aspects(client, monkeypatch):
+    """A retried extract must replace the previous LLM claims, never append duplicates:
+    duplicated sentiments flip the observation majority and silently deflate severity."""
+    from app import routes
+    from app.config import settings
+
+    class FakeGateway:
+        def complete(self, *, model, messages, json_schema=None, temperature=0.0):
+            return {"aspects": [{"label": "login crash", "sentiment": "negative",
+                                 "statement": "login crashes for the user",
+                                 "quote": "crashes on login", "confidence": 0.9}]}
+
+    monkeypatch.setattr(settings, "openrouter_api_key", "test-key")
+    monkeypatch.setattr(settings, "llm_model_extraction", "test/model")
+    monkeypatch.setattr(routes, "_gateway", lambda: FakeGateway())
+
+    _seed(client)
+    for _ in range(2):  # second call is the retry
+        r = client.post("/api/v1/feedback/1/aspects/extract")
+        assert r.status_code == 201, r.text
+        assert r.json()["stored"] == 1
+
+    with db.get_session() as s:
+        llm = s.execute(sa.select(db.aspects).where(
+            db.aspects.c.feedback_item_id == 1,
+            db.aspects.c.provenance == "llm_extracted")).mappings().all()
+        pre = s.execute(sa.select(db.aspects).where(
+            db.aspects.c.feedback_item_id == 1,
+            db.aspects.c.provenance == "pre_labeled")).mappings().all()
+    assert len(llm) == 1, "retry appended duplicate LLM claim rows instead of replacing"
+    assert len(pre) == 1, "replace must not touch pre-labeled claims"
+
+
+def test_cluster_label_tie_breaks_deterministically(client):
+    """Count ties break lexicographically, never by set iteration order (PYTHONHASHSEED)."""
+    items = [
+        {"external_id": "x1", "submitted_at": "2026-06-30T09:00:00Z",
+         "text": "It crashes when I login.",
+         "aspects": [{"label": "login crash", "sentiment": "negative"}]},
+        {"external_id": "x2", "submitted_at": "2026-06-29T09:00:00Z",
+         "text": "Crash at login again.",
+         "aspects": [{"label": "crash login", "sentiment": "negative"}]},
+    ]
+    r = client.post("/api/v1/feedback/import", json={
+        "source": {"name": "reviews", "kind": "app_reviews"}, "items": items})
+    assert r.status_code == 201, r.text
+    client.post("/api/v1/triage/run", json={})
+    issues = client.get("/api/v1/issues").json()["issues"]
+    assert len(issues) == 1
+    assert issues[0]["title"] == "crash login"  # 1-1 tie -> lexicographically smallest
+
+
+def test_concurrent_transition_conflict_returns_409(client, monkeypatch):
+    """If the issue state changes between validation and the write, the guarded UPDATE
+    matches zero rows and the request gets a typed 409 instead of a duplicate transition."""
+    from app import routes
+
+    _seed(client)
+    client.post("/api/v1/triage/run", json={})
+    iid = client.get("/api/v1/issues").json()["issues"][0]["id"]
+
+    real_validate = routes.validate_transition
+
+    def racing_validate(from_state, to_state):
+        real_validate(from_state, to_state)
+        # Simulate a concurrent request committing between validation and the write.
+        with db.get_session() as s2:
+            s2.execute(db.issues.update().where(db.issues.c.id == iid)
+                       .values(state="triaged"))
+            s2.commit()
+
+    monkeypatch.setattr(routes, "validate_transition", racing_validate)
+    r = client.post(f"/api/v1/issues/{iid}/transition", json={"to_state": "triaged"})
+    assert r.status_code == 409, r.text
+    assert r.json()["detail"]["error"] == "concurrent_transition"
+
+    monkeypatch.setattr(routes, "validate_transition", real_validate)
+    detail = client.get(f"/api/v1/issues/{iid}").json()
+    assert detail["transitions"] == [], "conflicting request must not append a transition"

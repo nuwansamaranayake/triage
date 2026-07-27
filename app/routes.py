@@ -26,7 +26,12 @@ from pydantic import BaseModel, Field
 
 from . import db
 from .config import settings
-from .engine.aspects import AspectClaim, aspects_from_entries, extract_aspects
+from .engine.aspects import (
+    AspectClaim,
+    AspectProvenance,
+    aspects_from_entries,
+    extract_aspects,
+)
 from .engine.clustering import ItemForClustering, build_clusters
 from .engine.embedding import HashingEmbedder
 from .engine.registry import INITIAL_STATE, IllegalTransition, validate_transition
@@ -131,8 +136,12 @@ def import_feedback(body: ImportIn, authorization: str | None = Header(default=N
             if not text:
                 raise HTTPException(status_code=422, detail=f"item {i} has empty text")
             when = _parse_when(e.get("submitted_at"))
-            content_hash = hashlib.sha256(
-                f"{body.source.name}|{text}".encode()).hexdigest()
+            # Dedup identity includes external_id when the source provides one: distinct
+            # records with identical text are distinct observations, not duplicates.
+            ext = e.get("external_id")
+            hash_key = (f"{body.source.name}|{ext}|{text}" if ext
+                        else f"{body.source.name}|{text}")
+            content_hash = hashlib.sha256(hash_key.encode()).hexdigest()
             if s.execute(sa.select(db.feedback_items.c.id)
                          .where(db.feedback_items.c.content_hash == content_hash)).first():
                 duplicates += 1
@@ -158,15 +167,23 @@ def import_feedback(body: ImportIn, authorization: str | None = Header(default=N
 def extract_feedback_aspects(fid: int, authorization: str | None = Header(default=None)):
     _auth(authorization)
     gateway = _gateway()
-    with db.get_session() as s, s.begin():
+    # Read in a short session that closes before the network call: a hung LLM request
+    # must never pin a pooled connection or hold a transaction open.
+    with db.get_session() as s:
         item = s.execute(sa.select(db.feedback_items)
                          .where(db.feedback_items.c.id == fid)).first()
-        if item is None:
-            raise HTTPException(status_code=404, detail="feedback item not found")
-        claims = extract_aspects(gateway, settings.llm_model_extraction, item.text,
-                                 f"feedback-{fid}")
+    if item is None:
+        raise HTTPException(status_code=404, detail="feedback item not found")
+    claims = extract_aspects(gateway, settings.llm_model_extraction, item.text,
+                             f"feedback-{fid}")
+    with db.get_session() as s, s.begin():
+        # Idempotent retry: replace this item's previous LLM extraction instead of
+        # appending duplicate rows (duplicates skew the sentiment majority and severity).
+        s.execute(db.aspects.delete().where(
+            db.aspects.c.feedback_item_id == fid,
+            db.aspects.c.provenance == AspectProvenance.llm_extracted.value))
         n = _store_aspects(s, fid, item.text, claims)
-        rejected = sum(1 for c in claims if c.core.verification.status == "rejected")
+    rejected = sum(1 for c in claims if c.core.verification.status == "rejected")
     return {"stored": n, "rejected_span_anchor": rejected, "provenance": "llm_extracted"}
 
 
@@ -202,7 +219,9 @@ def run_triage(authorization: str | None = Header(default=None)):
             existing = s.execute(sa.select(db.clusters)
                                  .where(db.clusters.c.cluster_key == key)).first()
             labels = sorted(labels_of.get(key, []))
-            label = (max(set(labels), key=labels.count) if labels
+            # Majority label with a total order: count ties break lexicographically, never
+            # by set iteration order (which varies with PYTHONHASHSEED across processes).
+            label = (min(set(labels), key=lambda lab: (-labels.count(lab), lab)) if labels
                      else key.replace("_", " "))
             cid = existing.id if existing else s.execute(db.clusters.insert().values(
                 cluster_key=key, label=label)).inserted_primary_key[0]
@@ -309,8 +328,17 @@ def transition_issue(iid: int, body: TransitionIn,
             raise HTTPException(status_code=409, detail={
                 "error": "illegal_transition", "from_state": exc.from_state,
                 "to_state": exc.to_state, "reason": exc.reason})
-        s.execute(db.issues.update().where(db.issues.c.id == iid)
-                  .values(state=body.to_state))
+        # Guarded write: the UPDATE only lands if the state is still the one we validated,
+        # so two concurrent requests cannot both append the same transition (lost update).
+        result = s.execute(db.issues.update()
+                           .where(db.issues.c.id == iid,
+                                  db.issues.c.state == issue.state)
+                           .values(state=body.to_state))
+        if result.rowcount == 0:
+            raise HTTPException(status_code=409, detail={
+                "error": "concurrent_transition", "from_state": issue.state,
+                "to_state": body.to_state,
+                "reason": "issue state changed between validation and write; re-read and retry"})
         s.execute(db.issue_transitions.insert().values(
             issue_id=iid, from_state=issue.state, to_state=body.to_state,
             note=body.note))
