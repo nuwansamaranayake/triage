@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-07-23
+
 ### Fixed
 - Adversarial review wave (10 findings, see FAILURES.md FAIL-0007): LLM aspect extraction
   no longer runs its network call inside an open DB transaction (read session closes

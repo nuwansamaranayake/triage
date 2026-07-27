@@ -1,6 +1,6 @@
 # Triage
 
-> **Status: Phase 1 core loop built (v0.1, branch phase-1).** Bulk import, aspect claims,
+> **Status: Phase 1 core loop released (v0.2.0).** Bulk import, aspect claims,
 > seeded clustering, an issue registry with a real state machine, and a documented severity
 > formula are implemented, tested, and gated: the golden eval suite is a required CI check
 > and every number below was observed, not promised. Changepoint alignment, hypothesis
