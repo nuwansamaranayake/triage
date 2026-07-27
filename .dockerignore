@@ -1,0 +1,19 @@
+# Keep secrets, VCS history, and local state out of image layers (Dockerfile does COPY . .).
+.git
+.env
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.planning
+LOOP_STATE.md
+data/local
+*.sqlite
+.coverage
+node_modules
+.next
+dist
+build
+*.egg-info
+.DS_Store
