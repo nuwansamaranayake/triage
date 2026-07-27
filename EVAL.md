@@ -9,6 +9,15 @@ their evidence; and its post-fix grades match what actually happened. A tool tha
 reopens them can be wrong — so "good" is defined by measured behavior against a known-truth stream,
 not by prose.
 
+## Published limits
+
+This sentence is what the root page publishes, verbatim. The gate fails if the page and this block drift apart.
+
+<!-- LIMITS -->
+On a golden set of 30 synthetic feedback items with 4 planted clusters, clustering is pure (1.0), every item is assigned (coverage 1.0), every legal state transition is accepted and every planted illegal one rejected (1.0), and severity ordering is monotone in frequency and recency (1.0); the set is synthetic, so it does not measure clustering quality on real customer feedback.
+<!-- /LIMITS -->
+
+
 ## Phase 1 acceptance thresholds (written before the harness, 2026-07-27)
 
 Phase 1 ships the deterministic core of the issue tracker (bulk import, aspect claims,

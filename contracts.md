@@ -9,6 +9,7 @@ smoke test.
 
 | Frontend call (Phase 2) | Method | Path | Status | Notes |
 |---|---|---|---|---|
+| Front page (browser) | GET | `/` | none | Self-contained HTML: thesis, what it measures, the EVAL.md limits sentence, the endpoint list, build stamp. Public by design. |
 | — (liveness probe) | GET | `/health` | implemented | Returns `{status, env}`. Used by smoke test and ops. |
 | — (dev demo only) | GET | `/api/v1/demo` | implemented | Returns `{items:[...]}` from `data/synthetic/`. Development-only; **503** outside development per Standard 3. |
 | — (API discovery) | GET | `/openapi.json`, `/docs` | implemented | OpenAPI spec + Swagger UI, served by FastAPI. `tests/test_contracts.py` checks this table against the spec in CI. |
