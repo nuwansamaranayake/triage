@@ -211,3 +211,20 @@ estate's operational repo:
 It covers the exposure window, the access-log finding (there were none), the data
 classification (synthetic only, proven by query), the root cause, and the controls now in
 place, including the `route_auth()` class check in `scripts/gate.py`.
+
+## FAIL: minutes of 502 from recreating a service whose db shared its network namespace
+
+- **Date**: 2026-08-03, the estate A2 rebuild wave.
+- **Observed**: triage-service-1 crash-looped on "connection to localhost:5432 refused"
+  after `up -d service`. The other three apps rebuilt clean with identical commands.
+- **Cause**: triage's compose gives db and redis `network_mode: "service:service"` — they
+  join the SERVICE container's network namespace, which is why its localhost URLs ever
+  worked. Recreating only the service container left db/redis bound to the dead
+  container's namespace: unreachable in both directions.
+- **Fix**: `--force-recreate` of the whole stack so db and redis rejoin the new namespace.
+  Data volumes persist across container recreation; nothing was lost. Verified by
+  MIGRATION OK: 9 tables and a full estate gate exit 0 afterwards.
+- **Rule**: a service-only recreate is safe only when dependants hold their own networks.
+  Before rebuilding any app, grep its compose for `network_mode: "service:` — if present,
+  recreate the stack, not the service. Third member of the recreate-trap family, after
+  stale single-file bind mounts and env_file-vs-image ENV precedence.
