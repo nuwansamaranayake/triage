@@ -7,7 +7,7 @@ services:
     ports: ["127.0.0.1:9704:8000"]
     environment:
       APP_ENV: production
-      DATABASE_URL: postgresql+psycopg://aignite:aignite@db:5432/triage
+      DATABASE_URL: postgresql+psycopg://aignite:${TRIAGE_DB_PASSWORD:?set TRIAGE_DB_PASSWORD in .env}@db:5432/triage
       REDIS_URL: redis://redis:6379/0
     depends_on:
       db: {condition: service_healthy}
@@ -17,7 +17,10 @@ services:
     mem_limit: 512m
     cpus: 0.75
     image: pgvector/pgvector:pg16
-    environment: {POSTGRES_USER: aignite, POSTGRES_PASSWORD: aignite, POSTGRES_DB: triage}
+    environment:
+      POSTGRES_USER: aignite
+      POSTGRES_PASSWORD: ${TRIAGE_DB_PASSWORD:?set TRIAGE_DB_PASSWORD in .env}
+      POSTGRES_DB: triage
     volumes: ["dbdata:/var/lib/postgresql/data"]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U aignite -d triage"]

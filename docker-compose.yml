@@ -6,7 +6,7 @@ services:
     image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: aignite
-      POSTGRES_PASSWORD: aignite
+      POSTGRES_PASSWORD: ${TRIAGE_DB_PASSWORD:-aignite}
       POSTGRES_DB: triage
     ports:
       - "${DB_HOST_PORT:-5432}:5432"
@@ -35,7 +35,7 @@ services:
       - "${API_PORT:-8000}:8000"
     environment:
       APP_ENV: development
-      DATABASE_URL: postgresql+psycopg://aignite:aignite@db:5432/triage
+      DATABASE_URL: postgresql+psycopg://aignite:${TRIAGE_DB_PASSWORD:-aignite}@db:5432/triage
       REDIS_URL: redis://redis:6379/0
     depends_on:
       db:
